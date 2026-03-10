@@ -1,9 +1,10 @@
 #!/bin/bash
 
-datasets=(sst2)
+datasets=(mnli qnli qqp sst2 record)
 peft_methods=(lora base)
 models=(llama-3.2-1b-instruct)
 saves_output_dir="saves_bts_preliminary"
+logging_dir="logs_bts_preliminary"
 seeds=(42)
 EPOCHS=5
 
@@ -23,10 +24,10 @@ do
                 WANDB_NAME="${pm}_${m}_train_${d}_${s}_${TIMESTAMP}"
 
                 mkdir -p ${OUTPUT_DIR}
-                mkdir -p logs
+                mkdir -p ${logging_dir}
 
                 export OUTPUT_DIR DATASET SEED WANDB_PROJECT WANDB_NAME EPOCHS
-                envsubst < examples/${pm}/${m}/train.yaml > ${OUTPUT_DIR}/train.yaml
+                envsubst < config_templates/${pm}/${m}/train.yaml > ${OUTPUT_DIR}/train.yaml
 
                 OUTPUT_DIR="${saves_output_dir}/${pm}/${m}/eval_${d}_${s}_${TIMESTAMP}"
                 WANDB_NAME="${pm}_${m}_eval_${d}_${s}_${TIMESTAMP}"
@@ -36,9 +37,9 @@ do
                 mkdir -p ${OUTPUT_DIR}
 
                 export OUTPUT_DIR WANDB_NAME ADAPTER DATASET
-                envsubst < examples/${pm}/${m}/eval.yaml > ${OUTPUT_DIR}/eval.yaml
+                envsubst < config_templates/${pm}/${m}/eval.yaml > ${OUTPUT_DIR}/eval.yaml
 
-                sbatch --job-name ${pm}_${m}_${d}_${s}_${TIMESTAMP} -o logs/${pm}_${m}_${d}_${s}_${TIMESTAMP}.out -e logs/${pm}_${m}_${d}_${s}_${TIMESTAMP}.err scripts/slurm/run_train_eval.sh ${saves_output_dir}/${pm}/${m}/train_${d}_${s}_${TIMESTAMP}/train.yaml ${saves_output_dir}/${pm}/${m}/eval_${d}_${s}_${TIMESTAMP}/eval.yaml ${saves_output_dir}/${pm}/${m}/eval_${d}_${s}_${TIMESTAMP} ${d}
+                sbatch --job-name ${pm}_${m}_${d}_${s}_${TIMESTAMP} -o ${logging_dir}/${pm}_${m}_${d}_${s}_${TIMESTAMP}.out -e ${logging_dir}/${pm}_${m}_${d}_${s}_${TIMESTAMP}.err scripts/slurm/run_train_eval.sh ${saves_output_dir}/${pm}/${m}/train_${d}_${s}_${TIMESTAMP}/train.yaml ${saves_output_dir}/${pm}/${m}/eval_${d}_${s}_${TIMESTAMP}/eval.yaml ${saves_output_dir}/${pm}/${m}/eval_${d}_${s}_${TIMESTAMP} ${d}
 
                 sleep 1
             done

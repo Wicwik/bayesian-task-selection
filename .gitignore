@@ -178,4 +178,4 @@ swanlog/
 generated_predictions.jsonl
 predictions_score.json
 experiments
-logs
+logs*
