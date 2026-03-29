@@ -1,8 +1,10 @@
 #!/bin/bash
 
-datasets=(mnli qnli qqp sst2 record)
+# orignal prelimianry experiments for training target tasks
+datasets=(mrpc boolq rte cola)
 peft_methods=(lora base)
 models=(llama-3.2-1b-instruct)
+
 saves_output_dir="saves_bts_preliminary"
 logging_dir="logs_bts_preliminary"
 seeds=(42)
