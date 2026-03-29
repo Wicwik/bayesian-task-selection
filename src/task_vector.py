@@ -35,6 +35,8 @@ class TaskVector:
             with safe_open(checkpoint_path, framework="pt", device="cpu") as f:
                 for key in f.keys():
                     tensors[key] = f.get_tensor(key)
+
+            return tensors
         except Exception as e:
             print(f"Error loading checkpoint from {checkpoint_path}: {e}")
             raise
@@ -42,6 +44,6 @@ class TaskVector:
 
 if __name__ == "__main__":
     # Example usage
-    pretrained_checkpoint = "saves_bts_preliminary/lora/llama-3.2-1b-instruct/train_sst2_42_1773148417/"
-    finetuned_checkpoint = "saves_bts_preliminary/lora/llama-3.2-1b-instruct/train_mnli_42_1773148411/"
+    pretrained_checkpoint = "saves_bts_preliminary/lora/llama-3.2-1b-instruct/train_sst2_42_1773148417/adapter_model.safetensors"
+    finetuned_checkpoint = "saves_bts_preliminary/lora/llama-3.2-1b-instruct/train_mnli_42_1773148411/adapter_model.safetensors"
     task_vector = TaskVector(model_name="example_model", pretrained_checkpoint=pretrained_checkpoint, finetuned_checkpoint=finetuned_checkpoint)
