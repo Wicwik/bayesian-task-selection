@@ -21,19 +21,27 @@ class SVFTConfig(PeftConfig):
     )
     rank: Optional[int] = field(
         default=None,
-        metadata={"help": "Maximum number of singular vectors retained during adaptation."},
+        metadata={
+            "help": "Maximum number of singular vectors retained during adaptation."
+        },
     )
     off_diag: int = field(
         default=1,
-        metadata={"help": "Number of off-diagonals that remain trainable when using banded sparsity."},
+        metadata={
+            "help": "Number of off-diagonals that remain trainable when using banded sparsity."
+        },
     )
     pattern: str = field(
         default="banded",
-        metadata={"help": "Sparse pattern for singular-value corrections: banded | random | top_k."},
+        metadata={
+            "help": "Sparse pattern for singular-value corrections: banded | random | top_k."
+        },
     )
     fill_orthonormal: bool = field(
         default=False,
-        metadata={"help": "Extend truncated singular spaces with random orthonormal bases when rank is limited."},
+        metadata={
+            "help": "Extend truncated singular spaces with random orthonormal bases when rank is limited."
+        },
     )
 
     def __post_init__(self):

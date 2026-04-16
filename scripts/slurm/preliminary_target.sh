@@ -2,7 +2,8 @@
 
 # orignal prelimianry experiments for training target tasks
 datasets=(mrpc boolq rte cola)
-peft_methods=(lora base)
+# peft_methods=(lora base)
+peft_methods=(base)
 models=(llama-3.2-1b-instruct)
 
 saves_output_dir="saves_bts_preliminary"

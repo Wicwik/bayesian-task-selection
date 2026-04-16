@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 import importlib.util
 from pathlib import Path
 import warnings
@@ -46,11 +44,17 @@ class SVFTModel(BaseTuner):
             return getattr(self.model, name)
 
     @staticmethod
-    def _prepare_adapter_config(peft_config: PeftConfig, model_config: dict) -> PeftConfig:
+    def _prepare_adapter_config(
+        peft_config: PeftConfig, model_config: dict
+    ) -> PeftConfig:
         if peft_config.target_modules is None:
-            target_modules = TRANSFORMERS_MODELS_TO_SVFT_TARGET_MODULES_MAPPING.get(model_config.get("model_type"))
+            target_modules = TRANSFORMERS_MODELS_TO_SVFT_TARGET_MODULES_MAPPING.get(
+                model_config.get("model_type")
+            )
             if target_modules is None:
-                raise ValueError("Please specify `target_modules` in `peft_config` for SVFT.")
+                raise ValueError(
+                    "Please specify `target_modules` in `peft_config` for SVFT."
+                )
             peft_config.target_modules = set(target_modules)
         return peft_config
 
@@ -83,7 +87,9 @@ class SVFTModel(BaseTuner):
             new_module.update_layer(target.base_layer, adapter_name, peft_config)
         return new_module
 
-    def _replace_module(self, parent: Module, child_name: str, new_module: Module, child: Module) -> None:
+    def _replace_module(
+        self, parent: Module, child_name: str, new_module: Module, child: Module
+    ) -> None:
         setattr(parent, child_name, new_module)
 
         if hasattr(child, "base_layer"):
@@ -121,12 +127,16 @@ class SVFTModel(BaseTuner):
     def disable_adapter_layers(self) -> None:
         self._set_adapter_layers(enabled=False)
 
-    def set_adapter(self, adapter_name: str | list[str], inference_mode: bool = False) -> None:
+    def set_adapter(
+        self, adapter_name: str | list[str], inference_mode: bool = False
+    ) -> None:
         active_list = adapter_name if isinstance(adapter_name, list) else [adapter_name]
         for module in self.model.modules():
             if isinstance(module, SVFTLayer):
                 if module.merged:
-                    warnings.warn("Adapter cannot be set when the model is merged. Unmerging the model first.")
+                    warnings.warn(
+                        "Adapter cannot be set when the model is merged. Unmerging the model first."
+                    )
                     module.unmerge()
                 payload = active_list if len(active_list) > 1 else active_list[0]
                 module.set_adapter(payload)

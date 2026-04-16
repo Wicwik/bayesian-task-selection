@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from typing import Dict, Optional
@@ -34,9 +33,13 @@ class _SVFTAdapter(nn.Module):
         diff_rank = max_rank - rank
 
         if config.fill_orthonormal and diff_rank > 0:
-            u_extra = torch.randn((u.shape[0], diff_rank), device=u.device, dtype=u.dtype)
+            u_extra = torch.randn(
+                (u.shape[0], diff_rank), device=u.device, dtype=u.dtype
+            )
             torch.nn.init.orthogonal_(u_extra)
-            v_extra = torch.randn((diff_rank, vh.shape[1]), device=vh.device, dtype=vh.dtype)
+            v_extra = torch.randn(
+                (diff_rank, vh.shape[1]), device=vh.device, dtype=vh.dtype
+            )
             torch.nn.init.orthogonal_(v_extra)
             u = torch.cat([u[:, :rank], u_extra], dim=1)
             vh = torch.cat([vh[:rank, :], v_extra], dim=0)
@@ -69,10 +72,16 @@ class _SVFTAdapter(nn.Module):
         if num_slots == 0:
             raise ValueError("SVFT pattern produced zero trainable positions.")
 
-        self.delta = nn.Parameter(torch.zeros(num_slots, device=self.device, dtype=self.param_dtype))
-        self.gate = nn.Parameter(torch.tensor(0.0, device=self.device, dtype=self.param_dtype))
+        self.delta = nn.Parameter(
+            torch.zeros(num_slots, device=self.device, dtype=self.param_dtype)
+        )
+        self.gate = nn.Parameter(
+            torch.tensor(0.0, device=self.device, dtype=self.param_dtype)
+        )
 
-    def _build_pattern(self, pattern: str, off_diag: int) -> tuple[torch.Tensor, torch.Tensor]:
+    def _build_pattern(
+        self, pattern: str, off_diag: int
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         pattern = pattern.lower()
         off_diag = max(0, int(off_diag))
         total = self.rank * self.rank
@@ -114,7 +123,9 @@ class _SVFTAdapter(nn.Module):
         return unique_row, unique_col
 
     def full_weight(self) -> torch.Tensor:
-        correction = torch.zeros((self.rank, self.rank), device=self.device, dtype=self.param_dtype)
+        correction = torch.zeros(
+            (self.rank, self.rank), device=self.device, dtype=self.param_dtype
+        )
         values = self.delta.to(dtype=correction.dtype)
         correction[self.row_idx, self.col_idx] = values
         correction = correction * torch.sigmoid(self.gate.to(dtype=correction.dtype))
@@ -123,7 +134,9 @@ class _SVFTAdapter(nn.Module):
         weight = self.u @ s_matrix @ self.v
         return weight.to(dtype=self.param_dtype)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:  # pragma: no cover - simple wrapper
+    def forward(
+        self, x: torch.Tensor
+    ) -> torch.Tensor:  # pragma: no cover - simple wrapper
         return F.linear(x, self.full_weight())
 
     def extra_repr(self) -> str:
@@ -133,7 +146,9 @@ class _SVFTAdapter(nn.Module):
 class SVFTLayer(nn.Module, BaseTunerLayer):
     adapter_layer_names = ("svft_layers",)
 
-    def __init__(self, base_layer: nn.Module, adapter_name: str, config: PeftConfig) -> None:
+    def __init__(
+        self, base_layer: nn.Module, adapter_name: str, config: PeftConfig
+    ) -> None:
         super().__init__()
         if not isinstance(base_layer, nn.Linear):
             raise TypeError("SVFTLayer expects nn.Linear modules as base layers.")
@@ -151,7 +166,9 @@ class SVFTLayer(nn.Module, BaseTunerLayer):
         self.set_adapter(adapter_name)
         self._disable_adapters = False
 
-    def update_layer(self, layer: nn.Module, adapter_name: str, config: PeftConfig) -> None:
+    def update_layer(
+        self, layer: nn.Module, adapter_name: str, config: PeftConfig
+    ) -> None:
         self.layer_configs[adapter_name] = config
         adapter = _SVFTAdapter(layer, config)
         self.svft_layers[adapter_name] = adapter
@@ -174,7 +191,9 @@ class SVFTLayer(nn.Module, BaseTunerLayer):
             return self.base_layer(x, *args, **kwargs)
 
         if len(self.active_adapters) != 1:
-            raise ValueError("SVFT only supports a single active adapter per layer during forward.")
+            raise ValueError(
+                "SVFT only supports a single active adapter per layer during forward."
+            )
 
         active = self.active_adapters[0]
         adapter = self.svft_layers[active]
@@ -186,7 +205,9 @@ class SVFTLayer(nn.Module, BaseTunerLayer):
         bias = self.base_layer.bias
         return F.linear(x, weight, bias)
 
-    def merge(self, safe_merge: bool = False, adapter_names: Optional[list[str]] = None) -> None:
+    def merge(
+        self, safe_merge: bool = False, adapter_names: Optional[list[str]] = None
+    ) -> None:
         adapter_names = check_adapters_to_merge(self, adapter_names)
         if not adapter_names:
             return
@@ -205,7 +226,9 @@ class SVFTLayer(nn.Module, BaseTunerLayer):
         if not self.merged:
             self._cached_base_weight = self.base_layer.weight.detach().clone()
             self._cached_base_bias = (
-                self.base_layer.bias.detach().clone() if self.base_layer.bias is not None else None
+                self.base_layer.bias.detach().clone()
+                if self.base_layer.bias is not None
+                else None
             )
 
         self.base_layer.weight.data.copy_(merged_weight)

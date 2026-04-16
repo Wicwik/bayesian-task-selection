@@ -1,6 +1,6 @@
 #!/bin/bash
 
-datasets=(mnli qnli qqp sst2 record)
+datasets=(mnli qnli qqp sst2 record mrpc boolq rte cola)
 peft_methods=(zero-shot)
 models=(llama-3.2-1b-instruct)
 saves_output_dir="saves_bts_preliminary"

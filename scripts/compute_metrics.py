@@ -20,7 +20,6 @@ import operator
 import re
 import glob
 import os
-from pathlib import Path
 
 import evaluate
 import numpy as np
@@ -110,7 +109,9 @@ def record(preds):
     dataset = load_dataset("kinit/peft-factory", "record", split="validation")
     metric = evaluate.load("super_glue", "record")
 
-    predictions = [{"idx": dataset[i]["idx"], "prediction_text": p} for i, p in enumerate(preds)]
+    predictions = [
+        {"idx": dataset[i]["idx"], "prediction_text": p} for i, p in enumerate(preds)
+    ]
 
     references = [{"idx": d["idx"], "answers": d["answers"]} for d in dataset]
 
@@ -208,7 +209,11 @@ def svamp(preds, targets, labels):
 
     def normalize_number_str(s):
         x = float(s.replace(",", ""))
-        return str(int(x)) if math.isclose(x, round(x), rel_tol=0, abs_tol=1e-9) else str(x)
+        return (
+            str(int(x))
+            if math.isclose(x, round(x), rel_tol=0, abs_tol=1e-9)
+            else str(x)
+        )
 
     def canon(eq):
         # remove spaces and normalize RHS number to canonical form
@@ -228,7 +233,11 @@ def svamp(preds, targets, labels):
             return {"ok": False, "reason": "eval_error", "match_gold": False}
         math_ok = abs(lhs_val - rhs_val) < tol
         gold_match = (canon(pred) == canon(gold)) if gold else None
-        return {"ok": math_ok, "reason": None if math_ok else "math_mismatch", "match_gold": gold_match}
+        return {
+            "ok": math_ok,
+            "reason": None if math_ok else "math_mismatch",
+            "match_gold": gold_match,
+        }
 
     total = len(preds)
     fmt_errors = 0
@@ -237,7 +246,12 @@ def svamp(preds, targets, labels):
 
     for i in range(total):
         r = evaluate_svamp(preds[i], targets[i])
-        if r["reason"] in {"not_single_equation", "lhs_not_single_parenthesized", "rhs_not_numeric", "eval_error"}:
+        if r["reason"] in {
+            "not_single_equation",
+            "lhs_not_single_parenthesized",
+            "rhs_not_numeric",
+            "eval_error",
+        }:
             fmt_errors += 1
         if r["ok"]:
             math_correct += 1
@@ -256,7 +270,9 @@ def svamp(preds, targets, labels):
 
 
 def codebleu_metric(preds, targets, _):
-    return calc_codebleu(targets, preds, lang="python", weights=(0.25, 0.25, 0.25, 0.25))
+    return calc_codebleu(
+        targets, preds, lang="python", weights=(0.25, 0.25, 0.25, 0.25)
+    )
 
 
 def find_dirs_with_timestamp(search_path: str) -> list[tuple[str, int]]:
@@ -306,7 +322,10 @@ def get_latest_dir(search_path: str) -> str | None:
 
 
 DATASET_TO_METRIC_MAPPING = {
-    "mnli": {"metrics": [macro_f1, em], "labels": ["entailment", "neutral", "contradiction"]},
+    "mnli": {
+        "metrics": [macro_f1, em],
+        "labels": ["entailment", "neutral", "contradiction"],
+    },
     "qqp": {"metrics": [f1, em], "labels": ["not_duplicate", "duplicate"]},
     "qnli": {"metrics": [f1, em], "labels": ["entailment", "not_entailment"]},
     "sst2": {"metrics": [f1, em], "labels": ["negative", "positive"]},
@@ -319,12 +338,18 @@ DATASET_TO_METRIC_MAPPING = {
     "boolq": {"metrics": [f1, em], "labels": ["false", "true"]},
     "wic": {"metrics": [f1, em], "labels": ["false", "true"]},
     "wsc": {"metrics": [f1, em], "labels": ["false", "true"]},
-    "cb": {"metrics": [macro_f1, em], "labels": ["entailment", "contradiction", "neutral"]},
+    "cb": {
+        "metrics": [macro_f1, em],
+        "labels": ["entailment", "contradiction", "neutral"],
+    },
     "copa": {"metrics": [f1, em], "labels": ["choice1", "choice2"]},
     "mmlu": {"metrics": [macro_f1, em], "labels": ["A", "B", "C", "D"]},
     "piqa": {"metrics": [f1, em], "labels": ["solution1", "solution2"]},
     "siqa": {"metrics": [macro_f1, em], "labels": ["A", "B", "C"]},
-    "hellaswag": {"metrics": [macro_f1, em], "labels": ["ending1", "ending2", "ending3", "ending4"]},
+    "hellaswag": {
+        "metrics": [macro_f1, em],
+        "labels": ["ending1", "ending2", "ending3", "ending4"],
+    },
     "winogrande": {"metrics": [f1, em], "labels": ["option1", "option2"]},
     "openbookqa": {"metrics": [macro_f1, em], "labels": ["A", "B", "C", "D"]},
     "math_qa": {"metrics": [macro_f1, em], "labels": ["a", "b", "c", "d", "e"]},
@@ -336,7 +361,7 @@ DATASET_TO_METRIC_MAPPING = {
 }
 
 
-datasets = ["mnli", "qnli", "qqp", "sst2", "record"]
+datasets = ["mnli", "qnli", "qqp", "sst2", "record", "mrpc", "boolq", "rte", "cola"]
 models = ["llama-3.2-1b-instruct"]
 peft_methods = ["lora", "base", "zero-shot"]
 
@@ -346,7 +371,11 @@ argparse_parser = argparse.ArgumentParser(
 )
 
 argparse_parser.add_argument("eval_dir", help="Directory created during evaluation.")
-argparse_parser.add_argument("--gather-results", action="store_true", help="Whether to gather results into a single table.")
+argparse_parser.add_argument(
+    "--gather-results",
+    action="store_true",
+    help="Whether to gather results into a single table.",
+)
 
 args = argparse_parser.parse_args()
 
@@ -358,13 +387,22 @@ if args.gather_results:
             for pm in peft_methods:
                 eval_dir = get_latest_dir(f"{args.eval_dir}/{pm}/{m}/eval_{dataset}*")
                 if eval_dir is None:
-                    print(f"No evaluation directory found for {dataset} {m} {pm}. Skipping.")
+                    print(
+                        f"No evaluation directory found for {dataset} {m} {pm}. Skipping."
+                    )
                     continue
 
                 with open(f"{eval_dir}/compute_metrics.jsonl") as json_file:
                     for line in json_file:
                         result = json.loads(line)
-                        all_results.append({"dataset": dataset, "model": m, "peft_method": pm, **result})
+                        all_results.append(
+                            {
+                                "dataset": dataset,
+                                "model": m,
+                                "peft_method": pm,
+                                **result,
+                            }
+                        )
 
     print(all_results)
 
@@ -372,8 +410,14 @@ if args.gather_results:
     id_cols = ["dataset", "model", "peft_method"]
     metric_cols = [c for c in df.columns if c not in id_cols]
 
-    df_merged = df.groupby(id_cols, as_index=False)[metric_cols].max().drop(columns=["macro_f1", "f1"])
+    df_merged = (
+        df.groupby(id_cols, as_index=False)[metric_cols]
+        .max()
+        .drop(columns=["macro_f1", "f1"])
+    )
     print(df_merged)
+
+    df_merged.to_csv("results.csv", index=False)
 
     exit(0)
 
@@ -381,14 +425,15 @@ if args.gather_results:
 for dataset in datasets:
     if dataset not in DATASET_TO_METRIC_MAPPING:
         raise ValueError(f"Dataset {dataset} not supported for metric computation.")
-    
+
     for m in models:
         for pm in peft_methods:
-
             print(f"Computing metrics for {dataset} {m} {pm}...")
             eval_dir = get_latest_dir(f"{args.eval_dir}/{pm}/{m}/eval_{dataset}*")
             if eval_dir is None:
-                print(f"No evaluation directory found for {dataset} {m} {pm}. Skipping.")
+                print(
+                    f"No evaluation directory found for {dataset} {m} {pm}. Skipping."
+                )
                 continue
 
             eval_samples = []
@@ -399,14 +444,20 @@ for dataset in datasets:
             labels, predictions = [], []
             for es in eval_samples:
                 labels.append(es["label"].split("</think>\n\n")[-1].strip().lower())
-                predictions.append(es["predict"].split("</think>\n\n")[-1].strip().lower())
+                predictions.append(
+                    es["predict"].split("</think>\n\n")[-1].strip().lower()
+                )
 
             with open(f"{eval_dir}/compute_metrics.jsonl", "w") as outfile:
                 for metric in DATASET_TO_METRIC_MAPPING[dataset]["metrics"]:
                     if dataset in ["record"]:
                         result = metric(predictions)
                     else:
-                        result = metric(predictions, labels, DATASET_TO_METRIC_MAPPING[dataset]["labels"])
+                        result = metric(
+                            predictions,
+                            labels,
+                            DATASET_TO_METRIC_MAPPING[dataset]["labels"],
+                        )
 
                     # print(result)
                     json.dump(result, outfile)

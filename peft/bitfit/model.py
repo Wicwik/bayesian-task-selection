@@ -35,17 +35,24 @@ class BitFitModel(BaseTuner):
         try:
             return super().__getattr__(name)
         except AttributeError:
-            if name == "model":  
+            if name == "model":
                 raise
             return getattr(self.model, name)
 
     @staticmethod
-    def _prepare_adapter_config(peft_config: PeftConfig, model_config: dict) -> PeftConfig:
+    def _prepare_adapter_config(
+        peft_config: PeftConfig, model_config: dict
+    ) -> PeftConfig:
         if peft_config.target_modules is None:
-            if model_config["model_type"] not in TRANSFORMERS_MODELS_TO_BITFIT_TARGET_MODULES_MAPPING:
+            if (
+                model_config["model_type"]
+                not in TRANSFORMERS_MODELS_TO_BITFIT_TARGET_MODULES_MAPPING
+            ):
                 raise ValueError("Please specify `target_modules` in `peft_config`")
             peft_config.target_modules = set(
-                TRANSFORMERS_MODELS_TO_BITFIT_TARGET_MODULES_MAPPING[model_config["model_type"]]
+                TRANSFORMERS_MODELS_TO_BITFIT_TARGET_MODULES_MAPPING[
+                    model_config["model_type"]
+                ]
             )
         return peft_config
 
@@ -79,7 +86,9 @@ class BitFitModel(BaseTuner):
             new_module.update_layer(target.base_layer, adapter_name)
         return new_module
 
-    def _replace_module(self, parent: Module, child_name: str, new_module: Module, child: Module) -> None:
+    def _replace_module(
+        self, parent: Module, child_name: str, new_module: Module, child: Module
+    ) -> None:
         setattr(parent, child_name, new_module)
 
         if hasattr(child, "base_layer"):
@@ -110,7 +119,6 @@ class BitFitModel(BaseTuner):
         for module in self.model.modules():
             if isinstance(module, (BitFitLayer, ModulesToSaveWrapper)):
                 module.enable_adapters(enabled)
-        
 
     def enable_adapter_layers(self) -> None:
         """Enable all adapters.
@@ -126,12 +134,13 @@ class BitFitModel(BaseTuner):
         """
         self._set_adapter_layers(enabled=False)
 
-
     def set_adapter(self, adapter_name: str) -> None:
         for module in self.model.modules():
             if isinstance(module, BitFitLayer):
                 if module.merged:
-                    warnings.warn("Adapter cannot be set when the model is merged. Unmerging the model first.")
+                    warnings.warn(
+                        "Adapter cannot be set when the model is merged. Unmerging the model first."
+                    )
                     module.unmerge()
                 module.set_adapter(adapter_name)
         self.active_adapter = adapter_name

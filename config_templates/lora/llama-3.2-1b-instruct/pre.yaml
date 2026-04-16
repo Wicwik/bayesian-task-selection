@@ -1,19 +1,22 @@
 seed: ${SEED}
 
 ### model
-model_name_or_path: ${ADAPTER}
+model_name_or_path: meta-llama/Llama-3.2-1B-Instruct
 trust_remote_code: true
 flash_attn: auto
 use_cache: false
 
 ### method
 stage: sft
-do_train: false
-finetuning_type: full
-
+do_train: true
+finetuning_type: lora
+lora_rank: 8
+lora_alpha: 8
+lora_dropout: 0.05
+lora_target: k_proj,v_proj
 
 ### dataset
-eval_dataset: ${DATASET}
+dataset: ${DATASET}
 template: llama3
 cutoff_len: 2048
 overwrite_cache: true
@@ -25,10 +28,11 @@ packing: false
 output_dir: ${OUTPUT_DIR}
 logging_steps: 5
 save_steps: 0.05
-plot_loss: true
 overwrite_output_dir: true
 save_only_model: false
+plot_loss: true
 include_num_input_tokens_seen: true
+load_best_model_at_end: false
 save_total_limit: 1
 
 ### train
@@ -43,18 +47,9 @@ resume_from_checkpoint: null
 warmup_ratio: 0.1
 optim: adamw_torch
 report_to:
-- wandb
-run_name: ${WANDB_NAME}
+  - none
 
 ### eval
-do_eval: false
 per_device_eval_batch_size: 8
-compute_classification_metrics: true
-
-### predict
-do_predict: true
-predict_with_generate: true
-temperature: null
-top_k: null
-top_p: null
-do_sample: false
+eval_strategy: 'no'
+do_eval: false

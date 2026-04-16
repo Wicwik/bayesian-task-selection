@@ -60,24 +60,33 @@ def calculate_flops(
     batch_size: int = 1
     seq_length: int = 512
 
-    model_args, data_args, training_args, finetuning_args, _, peft_args = get_train_args(args)
+    model_args, data_args, training_args, finetuning_args, _, peft_args = (
+        get_train_args(args)
+    )
 
     tokenizer_module = load_tokenizer(model_args)
     tokenizer = tokenizer_module["tokenizer"]
     _ = get_template_and_fix_tokenizer(tokenizer, data_args)
 
     with get_accelerator().device(0):
-        model = load_model(tokenizer, model_args, finetuning_args, peft_args, training_args.do_train)
+        model = load_model(
+            tokenizer, model_args, finetuning_args, peft_args, training_args.do_train
+        )
 
-        fake_input = torch.ones((batch_size, seq_length), dtype=torch.long, device=model.device)
+        fake_input = torch.ones(
+            (batch_size, seq_length), dtype=torch.long, device=model.device
+        )
         input_dict = {"input_ids": fake_input, "labels": fake_input.clone()}
-        flops, macs, params = get_model_profile(model, kwargs=input_dict, print_profile=True, detailed=True)
+        flops, macs, params = get_model_profile(
+            model, kwargs=input_dict, print_profile=True, detailed=True
+        )
         print("FLOPs:", flops)
         print("MACs:", macs)
         print("Params:", params)
 
         save_number_to_json(
-            flops, f"scripts/peftbench/stat_utils/flops_{path_to_config.split('/')[-1].split('.')[0]}.json"
+            flops,
+            f"scripts/peftbench/stat_utils/flops_{path_to_config.split('/')[-1].split('.')[0]}.json",
         )
 
 

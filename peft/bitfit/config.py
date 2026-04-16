@@ -8,7 +8,8 @@ from peft.utils import PeftType
 
 @dataclass
 class BitFitConfig(PeftConfig):
-    target_modules: Optional[Union[list[str], str]] = field(default=None,
+    target_modules: Optional[Union[list[str], str]] = field(
+        default=None,
         metadata={
             "help": (
                 "List of module names or regex expression of the module names to replace with BitFit."

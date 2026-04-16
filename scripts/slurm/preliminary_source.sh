@@ -2,7 +2,8 @@
 
 # orignal prelimianry experiments
 datasets=(mnli qnli qqp sst2 record)
-peft_methods=(lora base)
+# peft_methods=(lora base)
+peft_methods=(base)
 models=(llama-3.2-1b-instruct)
 
 # test with larger model (to see wheter the trainnig uses less ram)

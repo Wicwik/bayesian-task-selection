@@ -1,4 +1,3 @@
-
 from typing import Optional
 
 import torch
@@ -7,6 +6,7 @@ import torch.nn as nn
 from peft.tuners.tuners_utils import BaseTunerLayer, check_adapters_to_merge
 
 import warnings
+
 
 class BitFitLayer(nn.Module, BaseTunerLayer):
     adapter_layer_names = ("bitfit_layers",)
@@ -19,12 +19,10 @@ class BitFitLayer(nn.Module, BaseTunerLayer):
         self._active_adapter = adapter_name
         self.merged_adapters = []
 
-
     def update_layer(self, layer: nn.Module, adapter_name: str):
         new_layer = nn.Linear(layer.in_features, layer.out_features, bias=True)
         new_layer.weight.data = layer.weight.data.clone()
         self.bitfit_layers[adapter_name] = new_layer
-
 
     def enable_adapters(self, enabled: bool) -> None:
         """Toggle the enabling and disabling of adapters
@@ -40,14 +38,16 @@ class BitFitLayer(nn.Module, BaseTunerLayer):
         else:
             if self.merged:
                 self.unmerge()
-            
+
             # disable grads on all adapter layers
             for layer_name in self.adapter_layer_names:
                 layer = getattr(self, layer_name)
                 layer.requires_grad_(False)
             self._disable_adapters = True
 
-    def merge(self, adapter_names: Optional[list[str]] = None, safe_merge: bool = False):
+    def merge(
+        self, adapter_names: Optional[list[str]] = None, safe_merge: bool = False
+    ):
         # note that there is no actual merging, so whether safe_merge is True or False is irrelevant
         adapter_names = check_adapters_to_merge(self, adapter_names)
         if not adapter_names:
@@ -80,7 +80,7 @@ class BitFitLayer(nn.Module, BaseTunerLayer):
             self.bitfit_layersr[merged_name],
             self.base_layer,
         )
-    
+
     def forward(self, x: torch.Tensor, *args, **kwargs) -> torch.Tensor:
         if self.disable_adapters:
             if self.merged:

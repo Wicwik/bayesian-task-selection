@@ -42,11 +42,15 @@ for m in methods:
 
         max_val = history["system.gpu.0.memoryAllocatedBytes"].max()
 
-        max_values.append({"run": run.name.split("/")[-1], "id": run.id, "max_memory_usage": max_val})
+        max_values.append(
+            {"run": run.name.split("/")[-1], "id": run.id, "max_memory_usage": max_val}
+        )
 
     df = pd.DataFrame(max_values)
     mean_memory_usage[m] = np.round(df["max_memory_usage"].mean() / 1e9, 2)
 
 
-df_mem = pd.DataFrame.from_dict(mean_memory_usage, orient="index", columns=["mean_memory_usage_GB"])
+df_mem = pd.DataFrame.from_dict(
+    mean_memory_usage, orient="index", columns=["mean_memory_usage_GB"]
+)
 print(df_mem)
